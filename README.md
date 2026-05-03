@@ -1,2 +1,2 @@
 # COMP1002_Password_Demo
-Hashed password implementation and demonstration for COMP1002 assessment 2 quesiton 2
+Hashed password implementation and demonstration for COMP1002 assessment 2 quesiton 2. If you want to run this you need nodejs (version as of this commit is 24.13.1) installed along with Argon2.

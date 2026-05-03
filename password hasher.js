@@ -5,7 +5,7 @@ import { readFile, writeFile } from "node:fs/promises";
 
 const pepper = "VeryLongRandomlyGeneratedPasswordWhichShoudBeInAHardWareSecurityModuleThatIDon'tHave";
 const pepperInCorrectFormat = new Uint8Array(Buffer.from(pepper, "utf-8"));
-const databaseName = "userManagementDatabase.json";
+const hashedDatabasePath = "userManagementDatabase.json";
 
 var inp = createInterface(
     {
@@ -19,7 +19,7 @@ startLoginSignup();
 async function startLoginSignup()
 {
     let mode;
-    let answer = await inp.question("Are you \n1: logging in or \n2: signing up?: ");
+    let answer = await inp.question("Are you \n1: logging in \n2: signing up\n3: Converting another database?: ");
     
     switch (answer)
     {
@@ -28,6 +28,9 @@ async function startLoginSignup()
         break;
         case "2":
             createUser();
+        break;
+        case "3":
+            convertDatabase("unhashedDatabase.json");
         break;
         default:
             console.log("Not an option\n");
@@ -80,9 +83,11 @@ async function createUser()
 
 async function writeUserToDatabase(username, hash)
 {
-    let db = await getDatabase();
-    Object.defineProperty(db.users, username, {value:"", writable:true, enumerable:true});
-    db.users[username] = hash;
+    let db = await getDatabase(hashedDatabasePath);
+    // Object.assign(db.users, {[username]:hash});
+
+    db["users"][username] = hash;
+
     updateDatabase(db);
 }
 
@@ -94,7 +99,7 @@ async function makeHash(password)
 
 async function usernameInDatabase(username)
 {
-    let db = await getDatabase();
+    let db = await getDatabase(hashedDatabasePath);
     return Object.hasOwn(db.users, username);
 }
 
@@ -114,16 +119,36 @@ async function updateDatabase(newDatabase)
 
     let toWrite = JSON.stringify(newDatabase);
     toWrite = new Uint8Array(Buffer.from(toWrite, "utf-8"));
-    writeFile(databaseName, toWrite);
+    writeFile(hashedDatabasePath, toWrite);
 }
 
 async function getPassword(username)
 {
-    let db = await getDatabase();
+    let db = await getDatabase(hashedDatabasePath);
     return db.users[username];
 }
 
-async function getDatabase()
+async function getDatabase(filePath)
 {
-    return JSON.parse(await readFile(databaseName, {encoding:"utf-8"}));
+    return JSON.parse(await readFile(filePath, {encoding:"utf-8"}));
+}
+
+async function convertDatabase(unhashedDatabasePath)
+{
+    let udb = await getDatabase(unhashedDatabasePath);
+    let db = await getDatabase(hashedDatabasePath)
+
+    let usernames = Object.keys(udb.users);
+    
+    for (const currentUsername of usernames)
+    {
+        let plainPassword = udb.users[currentUsername];
+        let hashedPassword = await makeHash(plainPassword);
+        udb["users"][currentUsername] = hashedPassword;
+    }
+    
+    db.users = Object.assign(db.users, udb.users);
+    console.log(db.users);
+
+    updateDatabase(db);
 }
