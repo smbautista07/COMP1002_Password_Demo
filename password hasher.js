@@ -1,9 +1,11 @@
-import {createInterface} from "node:readline";
-import {hash} from 'argon2';
+import { createInterface } from "node:readline/promises";
+import { hash, verify } from 'argon2';
 import { Buffer } from "node:buffer";
+import { readFile, appendFile } from "node:fs/promises";
 
 const pepper = "VeryLongRandomlyGeneratedPasswordWhichShoudBeInAHardWareSecurityModuleThatIDon'tHave";
-const pepperInCorrectFormat = Buffer.from(pepper, "utf-8");
+const pepperInCorrectFormat = new Uint8Array(Buffer.from(pepper, "utf-8"));
+const dataBaseName = "userManagementDatabase.json";
 
 var inp = createInterface(
     {
@@ -12,19 +14,36 @@ var inp = createInterface(
     }
 );
 
-inp.question("Input a password:", (password) =>
-{
-    makeHash(password, outputHash);
-});
+startLoginSignup();
 
-async function makeHash(password, callback)
+async function startLoginSignup()
 {
-    var newPass = await hash(password, {secret: pepperInCorrectFormat});
-    callback(newPass);
+    let mode;
+    let answer = await inp.question("Are you \n1: logging in or \n2: signing up?: ");
+    
+    switch (answer)
+    {
+        case "1":
+            mode = "AuthoriseUser";
+        break;
+        case "2":
+            mode = "CreateUser";
+        break;
+        default:
+            console.log("Not an option\n");
+            startLoginSignup();
+            
+    }
+
+    if (mode)
+    {
+        let u = await inp.question("Enter username: ");
+    }
+    
+    return;
 }
 
-async function outputHash(hash)
+async function getDataBase()
 {
-    console.log(hash);
+    return JSON.parse(await readFile(dataBaseName, {encoding:"utf-8"}));
 }
-
