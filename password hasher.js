@@ -24,7 +24,7 @@ async function startLoginSignup()
     switch (answer)
     {
         case "1":
-            mode = "AuthoriseUser";
+            mode = "AuthenticateUser";
         break;
         case "2":
             mode = "CreateUser";
