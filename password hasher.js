@@ -47,7 +47,17 @@ async function authenticateUser()
         return;
     }
 
-    let p = await inp.question("Enter password: ");
+    let digest = await getPassword(name);
+
+    let pass = await inp.question("Enter password: ");
+
+    if (!await verify(digest,pass,{secret:pepperInCorrectFormat}))
+    {
+        console.log("Incorrect password entered");
+        return;
+    }
+
+    console.log(`Correct login entered. You are logged in as ${name}`);
 }
 
 async function createUser()
@@ -65,6 +75,7 @@ async function createUser()
     let hash = await makeHash(pass);
 
     writeUserToDatabase(name, hash);
+    console.log(`User added to database:\nName: ${name}\nEntry: ${hash}`);
 }
 
 async function writeUserToDatabase(username, hash)
@@ -104,6 +115,12 @@ async function updateDatabase(newDatabase)
     let toWrite = JSON.stringify(newDatabase);
     toWrite = new Uint8Array(Buffer.from(toWrite, "utf-8"));
     writeFile(databaseName, toWrite);
+}
+
+async function getPassword(username)
+{
+    let db = await getDatabase();
+    return db.users[username];
 }
 
 async function getDatabase()
