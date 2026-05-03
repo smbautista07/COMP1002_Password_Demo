@@ -24,23 +24,49 @@ async function startLoginSignup()
     switch (answer)
     {
         case "1":
-            mode = "AuthenticateUser";
+            AuthenticateUser();
         break;
         case "2":
-            mode = "CreateUser";
+            CreateUser();
         break;
         default:
             console.log("Not an option\n");
             startLoginSignup();
-            
     }
 
-    if (mode)
-    {
-        let u = await inp.question("Enter username: ");
-    }
-    
     return;
+}
+
+async function AuthenticateUser()
+{
+    let u = await inp.question("Enter username: ");
+
+    if (!usernameInDatabase(u))
+    {
+        console.log("User with username does not exist!")
+        return;
+    }
+
+    let p = await inp.question("Enter password: ");
+}
+
+async function CreateUser()
+{
+    let u = await inp.question("Enter username: ");
+
+    if (usernameInDatabase(u))
+    {
+        console.log("Please choose a unique username!")
+        return;
+    }
+
+    let p = await inp.question("Enter password: ");
+}
+
+async function usernameInDatabase(username)
+{
+    let db = await getDataBase();
+    return Object.hasOwn(db.users, username)
 }
 
 async function getDataBase()
